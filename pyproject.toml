@@ -1,0 +1,63 @@
+[tool.poetry]
+name = "biztrack-api"
+version = "0.1.0"
+description = "BizTrack ERP backend API"
+authors = ["Ricardo Palma <webschile@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.10,<4.0"
+
+# --- Core framework ---
+django = "^5.2"
+djangorestframework = "^3.16"
+
+# --- Database ---
+psycopg = { version = "^3.1", extras = ["binary"] }
+
+# --- Distributed tasks & cache ---
+celery = { version = "^5.5", extras = ["redis"] }
+
+django-redis = "^6.0.0"
+
+# ======================================================================
+# DEV DEPENDENCIES
+# ======================================================================
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+# Code quality
+black = "^25.11"
+flake8 = "^7.3"
+isort = "^7.0"
+
+# Git hooks
+pre-commit = "^4.5"
+
+# Testing
+pytest = "^9.0"
+pytest-cov = "^7.0"
+pytest-django = "^4.11"
+pytest-xdist = "^3.8"
+factory-boy = "^3.3"
+
+# Security
+bandit = "^1.9"
+safety = "^3.7"
+
+# Django debugging tools
+django-debug-toolbar = "^6.1"
+django-extensions = "^4.1"
+
+# REPL debugging
+ipdb = "^0.13"
+
+# File watching (autorefresh commands)
+watchdog = "^6.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0"]
+build-backend = "poetry.core.masonry.api"

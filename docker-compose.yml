@@ -1,0 +1,131 @@
+# =====================================================
+# Anchors
+# =====================================================
+x-biztrack-base: &biztrack-base
+  build:
+    context: .
+    dockerfile: Dockerfile
+    target: development
+  env_file:
+    - .env
+  volumes:
+    - .:/usr/src/app
+    - /usr/src/app/.venv
+  networks:
+    - biztrack-network
+  depends_on:
+    biztrack-redis:
+      condition: service_started
+    biztrack-postgres:
+      condition: service_healthy
+  restart: unless-stopped
+
+# =====================================================
+# Services
+# =====================================================
+services:
+  # ------------------------------
+  # Biztrack Backend
+  # ------------------------------
+  biztrack-backend:
+    <<: *biztrack-base
+    container_name: biztrack-backend
+    ports:
+      - "8000:8000"
+    command: python manage.py runserver 0.0.0.0:8000
+
+  # # ------------------------------
+  # # Celery Worker
+  # # ------------------------------
+  # biztrack-worker:
+  #   <<: *biztrack-base
+  #   container_name: biztrack-worker
+  #   command: celery -A root.celeryapp worker -l INFO -c 2 -n worker_celery
+
+  # # ------------------------------
+  # # Celery Beat (scheduler)
+  # # ------------------------------
+  # biztrack-beat:
+  #   <<: *biztrack-base
+  #   container_name: biztrack-beat
+  #   command: celery -A root.celeryapp beat -l INFO
+
+  # # ------------------------------
+  # # Flower Dashboard (Celery Monitor)
+  # ------------------------------
+  # biztrack-flower:
+  #   <<: *biztrack-base
+  #   container_name: biztrack-flower
+  #   command: ["celery", "-A", "root.celeryapp", "flower", "--broker=${REDIS_URL_CELERY}", "--port=5555"]
+  #   ports:
+  #     - "5555:5555"
+
+  # ------------------------------
+  # PostgreSQL Database
+  # ------------------------------
+  biztrack-postgres:
+    image: postgres:16-alpine
+    container_name: biztrack-postgres
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - biztrack-postgres-data:/var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    networks:
+      - biztrack-network
+    restart: unless-stopped
+
+    # ------------------------------
+    # HEALTHCHECK (FIX del error)
+    # ------------------------------
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  # ------------------------------
+  # Redis Cache / Message Broker
+  # ------------------------------
+  biztrack-redis:
+    image: redis:7-alpine
+    container_name: biztrack-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    networks:
+      - biztrack-network
+    restart: unless-stopped
+
+  # ------------------------------
+  # Mailpit (SMTP & Web UI for Dev)
+  # ------------------------------
+  biztrack-mailpit:
+    image: axllent/mailpit:latest
+    container_name: biztrack-mailpit
+    environment:
+      - MP_SMTP_AUTH_ACCEPT_ANY=1
+      - MP_SMTP_AUTH_ALLOW_INSECURE=1
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - biztrack-network
+    restart: unless-stopped
+
+# =====================================================
+# Volumes & Networks
+# =====================================================
+volumes:
+  biztrack-postgres-data:
+
+networks:
+  biztrack-network:
+    driver: bridge
