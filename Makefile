@@ -95,7 +95,7 @@ prune-system: ## Remove all unused Docker objects
 migrate: ## Apply all migrations manually
 	$(COMPOSE) run --rm $(MAIN_SERVICE) $(MANAGE_PY) migrate
 
-migrate-make: ## Create new migrations
+migrations: ## Create new migrations
 	$(COMPOSE) run --rm $(MAIN_SERVICE) $(MANAGE_PY) makemigrations
 
 migrate-check: ## Check migration conflicts

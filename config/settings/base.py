@@ -30,7 +30,9 @@ DJANGO_APPS = [
     'django.contrib.staticfiles',
 ]
 
-THIRD_PARTY_APPS = []
+THIRD_PARTY_APPS = [
+    'django_celery_beat',
+]
 
 LOCAL_APPS = []
 
@@ -150,9 +152,27 @@ LOGGING = {
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f"{env.redis.URL_BASE}/{env.redis.DEFAULT}",
+        'LOCATION': f"{env.redis.URL_BASE}/{env.redis.DEFAULT_DB}",
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         },
     }
 }
+
+
+# ======================================================
+# CELERY
+# ======================================================
+CELERY_BROKER_URL = env.celery.BROKER_URL
+CELERY_RESULT_BACKEND = env.celery.RESULT_BACKEND
+CELERY_ACCEPT_CONTENT = env.celery.ACCEPT_CONTENT
+CELERY_TASK_SERIALIZER = env.celery.TASK_SERIALIZER
+CELERY_RESULT_SERIALIZER = env.celery.RESULT_SERIALIZER
+CELERY_TIMEZONE = env.celery.TIMEZONE
+CELERY_ENABLE_UTC = env.celery.ENABLE_UTC
+CELERY_TASK_TRACK_STARTED = env.celery.TASK_TRACK_STARTED
+CELERY_TASK_TIME_LIMIT = env.celery.TASK_TIME_LIMIT
+CELERY_BEAT_SCHEDULER = env.celery.BEAT_SCHEDULER
+
+# Django Celery Beat
+DJANGO_CELERY_BEAT_TZ_AWARE = env.celery.BEAT_TZ_AWARE
