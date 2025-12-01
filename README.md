@@ -39,8 +39,8 @@ Before building and running this project, ensure you have the following tools in
 **1. Clone the Repository**:
 
 ```bash
-clone [repository URL]
-cd [project-folder]
+clone https://github.com/UnderWeb/biztrack-api.git
+cd biztrack-api
 ```
 
 **2. Configure environment variables**:
@@ -150,7 +150,7 @@ to see all available commands with descriptions.
 | Command | Description |
 | ------- | ----------- |
 | `make migrate` | Apply migrations |
-| `make migrate-make` | Generate new migrations (`makemigrations`) |
+| `make migrations` | Generate new migrations (`makemigrations`) |
 | `make migrate-check` | Check for migration conflicts (`--check --dry-run`) |
 | `make showmigrations` | Show all migrations & status |
 | `make db-shell` | Access PostgreSQL shell |
@@ -187,3 +187,9 @@ to see all available commands with descriptions.
 | `make clean` | Remove containers, networks, volumes (-v) |
 | `make clean-images` | Remove containers & images |
 | `make prune-system` | Remove all unused Docker objects system-wide |
+
+---
+
+## 📋 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.

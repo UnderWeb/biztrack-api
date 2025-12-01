@@ -80,8 +80,15 @@ class Database:
 # ================================================
 @dataclass(frozen=True)
 class RedisConfig:
-    URL_BASE: str = _get("REDIS_URL_BASE", required=True)
-    DEFAULT: int = _get("REDIS_DB_DEFAULT", required=True)
+    HOST: str = _get("REDIS_HOST", required=True)
+    PORT: str = _get("REDIS_PORT", default="6379")
+    PASSWORD: str = _get("REDIS_PASSWORD", required=True)
+    DEFAULT_DB: int = _get("REDIS_DB_DEFAULT", required=True, cast=int)
+    CELERY_DB: int = _get("REDIS_DB_CELERY", required=True, cast=int)
+
+    @property
+    def URL_BASE(self) -> str:
+        return f"redis://:{self.PASSWORD}@{self.HOST}:{self.PORT}"
 
 
 # ================================================
@@ -119,6 +126,35 @@ class DjangoConfig:
 
 
 # ================================================
+# Celery
+# ================================================
+@dataclass(frozen=True)
+class CeleryConfig:
+    redis: RedisConfig
+
+    @property
+    def BROKER_URL(self) -> str:
+        return f"{self.redis.URL_BASE}/{self.redis.CELERY_DB}"
+
+    @property
+    def RESULT_BACKEND(self) -> str:
+        return f"{self.redis.URL_BASE}/{self.redis.CELERY_DB}"
+
+    TIMEZONE: str = _get("CELERY_TIMEZONE", required=True)
+    ACCEPT_CONTENT: list[str] = field(
+        default_factory=lambda: _get("CELERY_ACCEPT_CONTENT", default="json").split(",")
+    )
+    TASK_SERIALIZER: str = _get("CELERY_TASK_SERIALIZER", default="json")
+    RESULT_SERIALIZER: str = _get("CELERY_RESULT_SERIALIZER", default="json")
+    ENABLE_UTC: bool = _get("CELERY_ENABLE_UTC", default="true", cast=_to_bool)
+    TASK_TRACK_STARTED: bool = _get("CELERY_TASK_TRACK_STARTED", default="true", cast=_to_bool)
+    TASK_TIME_LIMIT: int = _get("CELERY_TASK_TIME_LIMIT", default=300, cast=int)
+    BEAT_SCHEDULER: str = _get("CELERY_BEAT_SCHEDULER", required=True)
+
+    BEAT_TZ_AWARE: bool = _get("DJANGO_CELERY_BEAT_TZ_AWARE", default="true", cast=_to_bool)
+
+
+# ================================================
 # Exported config
 # ================================================
 secrets = Secrets()
@@ -127,3 +163,4 @@ redis = RedisConfig()
 email = Email()
 aws = AWS()
 django_conf = DjangoConfig()
+celery = CeleryConfig(redis)

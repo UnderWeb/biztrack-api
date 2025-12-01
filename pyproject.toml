@@ -22,6 +22,8 @@ celery = { version = "^5.5", extras = ["redis"] }
 
 django-redis = "^6.0.0"
 
+django-celery-beat = "^2.8.1"
+
 # ======================================================================
 # DEV DEPENDENCIES
 # ======================================================================
@@ -33,12 +35,14 @@ optional = true
 black = "^25.11"
 flake8 = "^7.3"
 isort = "^7.0"
+pylint-celery = "^0.3"
 
 # Git hooks
 pre-commit = "^4.5"
 
 # Testing
 pytest = "^9.0"
+pytest-celery = "^1.2"
 pytest-cov = "^7.0"
 pytest-django = "^4.11"
 pytest-xdist = "^3.8"
@@ -57,6 +61,9 @@ ipdb = "^0.13"
 
 # File watching (autorefresh commands)
 watchdog = "^6.0"
+
+# Celery tools
+flower = "^2.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0"]

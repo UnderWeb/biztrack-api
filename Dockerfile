@@ -45,7 +45,7 @@ RUN . /opt/venv/bin/activate \
 FROM deps AS development
 
 RUN . /opt/venv/bin/activate \
-    && poetry install --no-interaction --no-ansi
+    && poetry install --no-interaction --no-ansi --with dev
 
 COPY . .
 
