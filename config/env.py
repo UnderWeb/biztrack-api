@@ -64,6 +64,16 @@ class Secrets:
 
 
 # ================================================
+# Project
+# ================================================
+@dataclass(frozen=True)
+class ProjectConfig:
+    NAME: str = _get("PROJECT_NAME", required=True)
+    URL: str = _get("PROJECT_URL", required=True)
+    EMAIL: str = _get("PROJECT_EMAIL", required=True)
+
+
+# ================================================
 # Database
 # ================================================
 @dataclass(frozen=True)
@@ -155,12 +165,25 @@ class CeleryConfig:
 
 
 # ================================================
+# JWT
+# ================================================
+@dataclass(frozen=True)
+class JWTConfig:
+    ACCESS_TOKEN_LIFETIME_MINUTES: int = _get("JWT_ACCESS_LIFETIME_MINUTES", default="15", cast=int)
+    REFRESH_TOKEN_LIFETIME_DAYS: int = _get("JWT_REFRESH_LIFETIME_DAYS", default="7", cast=int)
+    ROTATE_REFRESH_TOKENS: bool = _get("JWT_ROTATE_REFRESH_TOKENS", default="true", cast=_to_bool)
+    BLACKLIST_AFTER_ROTATION: bool = _get("JWT_BLACKLIST_AFTER_ROTATION", default="true", cast=_to_bool)
+
+
+# ================================================
 # Exported config
 # ================================================
 secrets = Secrets()
+project = ProjectConfig()
 database = Database()
 redis = RedisConfig()
 email = Email()
 aws = AWS()
 django_conf = DjangoConfig()
 celery = CeleryConfig(redis)
+jwt = JWTConfig()

@@ -8,6 +8,7 @@ This file:
 - Does not read os.getenv directly (single source of truth = env.py)
 """
 
+from datetime import timedelta
 from pathlib import Path
 from .. import env
 
@@ -32,6 +33,9 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     'django_celery_beat',
+    'drf_spectacular',
+    'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 LOCAL_APPS = []
@@ -106,13 +110,136 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True
-USE_TZ = True
+USE_THOUSAND_SEPARATOR = True
+USE_TZ = False
 
 
 # ======================================================
 # DEFAULT PRIMARY KEY
 # ======================================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# ======================================================
+# DJANGO REST FRAMEWORK
+# ======================================================
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
+    'DEFAULT_PAGINATION_CLASS': 'config.pagination.StandardResultsPagination',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+
+# ================================================
+# DRF Spectacular (OpenAPI Schema)
+# ================================================
+SPECTACULAR_SETTINGS = {
+    # ---- BASIC METADATA ----
+    "TITLE": "BizTrack API",
+    "DESCRIPTION": (
+        "BizTrack — Business management platform.\n\n"
+        "Documentation automatically generated with OpenAPI 3."
+    ),
+    "VERSION": "1.0.0",
+    "CONTACT": {
+        "name": env.project.NAME,
+        "url": env.project.URL,
+        "email": env.project.EMAIL,
+    },
+
+    # ---- SCHEMA ----
+    "SERVE_INCLUDE_SCHEMA": False,  # /schema/ solo sirve el esquema, no la UI
+    "ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE": False,
+    "CAMELIZE_NAMES": False,  # True si quieres camelCase en los docs
+
+    # ---- COMPONENTES & AUTH ----
+    "COMPONENT_SPLIT_REQUEST": True,
+    "COMPONENT_NO_READ_ONLY_REQUIRED": True,
+
+    "SECURITY": [
+        {"BearerAuth": []},  # Para JWT
+    ],
+    "SECURITY_SCHEMES": {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    },
+
+    # ---- SWAGGER UI ----
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "persistAuthorization": True,
+        "displayOperationId": True,
+        "filter": True,  # barra de búsqueda
+        "tryItOutEnabled": True,
+    },
+
+    # Puedes cambiar la versión del CDN si quieres
+    "SWAGGER_UI_DIST": "https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest",
+
+    # favicon propio opcional
+    # "SWAGGER_UI_FAVICON_HREF": settings.STATIC_URL + "biztrack_favicon.png",
+
+    # ---- REDOC ----
+    "REDOC_DIST": "https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js",
+
+    # ---- GENERACIÓN DEL ESQUEMA ----
+    "PREPROCESSING_HOOKS": [],
+    "POSTPROCESSING_HOOKS": [],
+    "SERVE_PERMISSIONS": [],  # por defecto sin auth para docs
+}
+
+
+# ======================================================
+# JWT
+# ======================================================
+SIMPLE_JWT = {
+    # lifetimes
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=env.jwt.ACCESS_TOKEN_LIFETIME_MINUTES),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=env.jwt.REFRESH_TOKEN_LIFETIME_DAYS),
+
+    # rotation & blacklist (recommended for BizTrack)
+    "ROTATE_REFRESH_TOKENS": env.jwt.ROTATE_REFRESH_TOKENS,
+    "BLACKLIST_AFTER_ROTATION": env.jwt.BLACKLIST_AFTER_ROTATION,
+    "UPDATE_LAST_LOGIN": False,
+
+    # crypto
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": env.secrets.SECRET_KEY,  # or use an env-only JWT_SIGNING_KEY if preferred
+    "VERIFYING_KEY": "",
+    "AUDIENCE": None,
+    "ISSUER": None,
+    "LEEWAY": 0,
+
+    # auth header
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+
+    # user lookup
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
+
+    # optional sliding tokens (not used by default)
+    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
+
+    # serializers (defaults ok)
+    "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
+    "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
+    "TOKEN_VERIFY_SERIALIZER": "rest_framework_simplejwt.serializers.TokenVerifySerializer",
+    "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
+}
 
 
 # ======================================================
