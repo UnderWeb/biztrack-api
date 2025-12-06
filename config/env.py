@@ -108,9 +108,19 @@ class RedisConfig:
 class Email:
     HOST: str = _get("EMAIL_HOST", required=(ENV == "production"))
     PORT: int = _get("EMAIL_PORT", default=587, cast=int)
-    USER: Optional[str] = _get("EMAIL_HOST_USER")
-    PASSWORD: Optional[str] = _get("EMAIL_HOST_PASSWORD")
+    USER: Optional[str] = _get("EMAIL_USER", default="")
+    PASSWORD: Optional[str] = _get("EMAIL_PASSWORD", default="")
     USE_TLS: bool = _get("EMAIL_USE_TLS", default="true", cast=_to_bool)
+    USE_SSL: bool = _get("EMAIL_USE_SSL", default="false", cast=_to_bool)
+    TIMEOUT: int = _get("EMAIL_TIMEOUT", default=30, cast=int)
+    CONNECTION_MAX_RETRIES: int = _get("EMAIL_CONNECTION_MAX_RETRIES", default=3, cast=int)
+    BATCH_SIZE: int = _get("EMAIL_BATCH_SIZE", default=90, cast=int)
+    MAX_ATTACHMENT_MB: int = _get("EMAIL_MAX_ATTACHMENT_MB", default=10, cast=int)
+    DEFAULT_FROM: str = _get("DEFAULT_FROM_EMAIL", required=True)
+
+    def __post_init__(self):
+        if self.USE_TLS and self.USE_SSL:
+            raise ValueError("EMAIL_USE_TLS and EMAIL_USE_SSL are mutually exclusive")
 
 
 # ================================================
@@ -118,10 +128,24 @@ class Email:
 # ================================================
 @dataclass(frozen=True)
 class AWS:
-    ACCESS_KEY: Optional[str] = _get("AWS_ACCESS_KEY_ID")
-    SECRET_KEY: Optional[str] = _get("AWS_SECRET_ACCESS_KEY")
-    BUCKET: Optional[str] = _get("AWS_STORAGE_BUCKET_NAME")
-    DOMAIN: Optional[str] = _get("AWS_S3_CUSTOM_DOMAIN")
+    ACCESS_KEY: Optional[str] = _get("AWS_ACCESS_KEY_ID", required=True)
+    SECRET_KEY: Optional[str] = _get("AWS_SECRET_ACCESS_KEY", required=True)
+    BUCKET_NAME: Optional[str] = _get("AWS_STORAGE_BUCKET_NAME", required=True)
+    REGION_NAME: Optional[str] = _get("AWS_S3_REGION_NAME", required=True)
+    STATIC_LOCATION: Optional[str] = _get("AWS_STATIC_LOCATION", required=True)
+    MEDIA_LOCATION: Optional[str] = _get("AWS_MEDIA_LOCATION", required=True)
+
+    @property
+    def CUSTOM_DOMAIN(self) -> str:
+        return f"{self.BUCKET_NAME}.s3.amazonaws.com"
+
+    @property
+    def STATIC_URL(self) -> str:
+        return f"https://{self.CUSTOM_DOMAIN}/{self.STATIC_LOCATION}/"
+
+    @property
+    def MEDIA_URL(self) -> str:
+        return f"https://{self.CUSTOM_DOMAIN}/{self.MEDIA_LOCATION}/"
 
 
 # ================================================
