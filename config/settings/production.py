@@ -33,3 +33,20 @@ DATABASES = {
         'PORT': env.database.PORT,
     }
 }
+
+
+# ======================================================
+# CORS
+# ======================================================
+CORS_ALLOWED_ORIGINS = [
+    "https://app.biztrack.cl",
+]
+
+
+# ======================================================
+# CSRF
+# ======================================================
+CSRF_TRUSTED_ORIGINS = [
+    "https://app.biztrack.cl",
+    "https://*.biztrack.cl",  # optional wildcard if subdomains exist
+]
