@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "biztrack-api"
-version = "0.1.0"
+version = "0.1.1"
 description = "BizTrack ERP backend API"
 authors = ["Ricardo Palma <webschile@gmail.com>"]
 license = "MIT"
@@ -33,10 +33,12 @@ django-storages = "^1.14"
 # --- HTTP utilities ---
 requests = "^2.32"
 
+# --- Cors ---
+django-cors-headers = "^4.9.0"
+
 # ======================================================================
 # DEV DEPENDENCIES
 # ======================================================================
-django-cors-headers = "^4.9.0"
 [tool.poetry.group.dev]
 optional = true
 
@@ -57,6 +59,7 @@ pytest-cov = "^7.0"
 pytest-django = "^4.11"
 pytest-xdist = "^3.8"
 factory-boy = "^3.3"
+mypy = "^1.19.0"
 
 # Security
 bandit = "^1.9"
@@ -69,15 +72,36 @@ django-extensions = "^4.1"
 # REPL debugging
 ipdb = "^0.13"
 
-# File watching (autorefresh commands)
+# File watching
 watchdog = "^6.0"
 
 # Celery tools
 flower = "^2.0"
 
-# DRF
+# DRF utils
 drf-writable-nested = "^0.7.2"
 drf-access-policy = "^1.5.0"
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+extend-exclude = "migrations"
+
+[tool.isort]
+profile = "black"
+line_length = 88
+py_version = 310
+extend_skip = ["migrations"]
+known_first_party = ["core", "apps", "config"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_configs = true
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = false
+exclude = "migrations"
 
 [build-system]
 requires = ["poetry-core>=2.0.0"]

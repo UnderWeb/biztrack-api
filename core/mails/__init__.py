@@ -1,15 +1,15 @@
-from .tasks import send_email, send_emails
-from .sender import EmailSender
 from .exceptions import (
-    EmailError,
-    EmailBuildError,
     AttachmentError,
-    AttachmentNotFoundError,
     AttachmentMimeError,
+    AttachmentNotFoundError,
     AttachmentTooLargeError,
     BatchSendError,
+    EmailBuildError,
+    EmailError,
     EmailTransportError,
 )
+from .sender import EmailSender
+from .tasks import send_email, send_emails
 
 __all__ = [
     "send_email",

@@ -4,11 +4,12 @@ from typing import Any, Dict, Optional
 from django.conf import settings
 
 from core.files import (
-    read_file,
     download_file,
     infer_filename_from_url,
+    read_file,
     sanitize_filename,
 )
+
 from .exceptions import AttachmentError
 
 logger = logging.getLogger(__name__)
@@ -49,11 +50,10 @@ class AttachmentResolver:
         if key in self._cache:
             cached = self._cache[key]
             if cached is None:
-                logger.warning(
-                    "Attachment previously failed (cache hit): %s",
-                    key
+                logger.warning("Attachment previously failed (cache hit): %s", key)
+                raise AttachmentError(
+                    "Previously failed attachment", {"cache_key": key}
                 )
-                raise AttachmentError("Previously failed attachment", {"cache_key": key})
 
             logger.info("Attachment resolved from cache: %s", key)
             return cached
@@ -87,7 +87,9 @@ class AttachmentResolver:
                     content = content.encode()
             else:
                 logger.error("Unsupported attachment type: %s", file_type)
-                raise AttachmentError("Unsupported attachment type", {"type": file_type})
+                raise AttachmentError(
+                    "Unsupported attachment type", {"type": file_type}
+                )
 
             if len(content) > self.max_bytes:
                 logger.warning(
@@ -106,11 +108,7 @@ class AttachmentResolver:
 
         except AttachmentError as e:
             self._cache[key] = None
-            logger.warning(
-                "Attachment failed (cached as None): %s",
-                key,
-                exc_info=e
-            )
+            logger.warning("Attachment failed (cached as None): %s", key, exc_info=e)
             raise
 
     def resolve_filename(self, att: Dict[str, Any]) -> str:

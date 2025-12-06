@@ -9,18 +9,13 @@ class EmailError(Exception):
     Supports contextual data for better logging (e.g. Sentry).
     """
 
-    def __init__(
-            self,
-            message: str,
-            *,
-            context: ContextType = None
-        ):
+    def __init__(self, message: str, *, context: ContextType = None):
         """
         Initialize the email error.
 
         Args:
             message (str): Human-readable error message.
-            context (dict | None, optional): Additional structured metadata to 
+            context (dict | None, optional): Additional structured metadata to
             provide context for logging and debugging. Defaults to None.self.message
         """
         super().__init__(message)
@@ -38,8 +33,8 @@ class EmailError(Exception):
             return self.message
 
         context_str = "; ".join(
-            f"{k}='{v}'" 
-            for k, v in self.context.items() 
+            f"{k}='{v}'"
+            for k, v in self.context.items()
             if v is not None and len(str(v)) < 50
         )
 
@@ -50,6 +45,7 @@ class EmailBuildError(EmailError):
     """
     Raised when an email cannot be generated.
     """
+
     pass
 
 
@@ -58,6 +54,7 @@ class AttachmentError(EmailError):
     Raised when an attachment cannot be retrieved, validated
     or transformed.
     """
+
     pass
 
 
@@ -65,6 +62,7 @@ class AttachmentNotFoundError(AttachmentError):
     """
     Raised when an attachment key/path does not exist in storage.
     """
+
     pass
 
 
@@ -72,6 +70,7 @@ class AttachmentMimeError(AttachmentError):
     """
     Raised when MIME type cannot be determined or is invalid.
     """
+
     pass
 
 
@@ -79,6 +78,7 @@ class AttachmentTooLargeError(AttachmentError):
     """
     Raised when an attachment exceeds defined size limits.
     """
+
     pass
 
 
@@ -115,9 +115,9 @@ class BatchSendError(EmailError):
         self.context["total_failed"] = len(failed_recipients)
 
         if successful_recipients is not None:
-             self.context["total_successful"] = len(successful_recipients)
+            self.context["total_successful"] = len(successful_recipients)
 
-    def __str__(self)-> str:
+    def __str__(self) -> str:
         """
         Returns:
             str: Base message plus recipient list.
@@ -127,11 +127,13 @@ class BatchSendError(EmailError):
         # Display only a sample of failures if the list is very large.
         failed_count = len(self.failed_recipients)
         recipient_sample = ", ".join(self.failed_recipients[:5])
-        
+
         if failed_count > 5:
-             recipient_info = f"Failed Sample: [{recipient_sample}, ... (+{failed_count - 5} more)]"
+            recipient_info = (
+                f"Failed Sample: [{recipient_sample}, ... (+{failed_count - 5} more)]"
+            )
         else:
-             recipient_info = f"Failed: {self.failed_recipients}"
+            recipient_info = f"Failed: {self.failed_recipients}"
 
         return f"{base} | Total Failed={failed_count} | {recipient_info}"
 
@@ -140,4 +142,5 @@ class EmailTransportError(EmailError):
     """
     Raised when the underlying email transport fails.
     """
+
     pass

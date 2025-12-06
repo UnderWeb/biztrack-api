@@ -1,6 +1,5 @@
 from .base import *
 
-
 # ======================================================
 # SECURITY
 # ======================================================
@@ -15,13 +14,13 @@ ALLOWED_HOSTS = env.django_conf.ALLOWED_HOSTS
 # DATABASE
 # ======================================================
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env.database.NAME,
-        'USER': env.database.USER,
-        'PASSWORD': env.database.PASSWORD,
-        'HOST': env.database.HOST,
-        'PORT': env.database.PORT,
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env.database.NAME,
+        "USER": env.database.USER,
+        "PASSWORD": env.database.PASSWORD,
+        "HOST": env.database.HOST,
+        "PORT": env.database.PORT,
     }
 }
 
@@ -45,4 +44,4 @@ CSRF_TRUSTED_ORIGINS = [
 # ======================================================
 # LOGGING (more verbose than production)
 # ======================================================
-LOGGING['root']['level'] = 'DEBUG'
+LOGGING["root"]["level"] = "DEBUG"

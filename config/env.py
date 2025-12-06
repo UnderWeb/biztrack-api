@@ -10,7 +10,7 @@ This module centralizes:
 
 import os
 from dataclasses import dataclass, field
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 
 # ================================================
@@ -32,7 +32,9 @@ def _get(name: str, default=None, required: bool = False, cast=None):
         try:
             return cast(raw)
         except Exception:
-            raise RuntimeError(f"[env] Failed to cast environment variable {name}={raw}")
+            raise RuntimeError(
+                f"[env] Failed to cast environment variable {name}={raw}"
+            )
 
     return raw
 
@@ -45,9 +47,7 @@ def _to_bool(value: str) -> bool:
 # Environment selection
 # ================================================
 ENV: Literal["development", "staging", "production"] = _get(
-    "DJANGO_ENV",
-    default="development",
-    cast=str
+    "DJANGO_ENV", default="development", cast=str
 )
 
 
@@ -59,7 +59,7 @@ class Secrets:
     SECRET_KEY: str = _get(
         "SECRET_KEY",
         default="dev-secret-key",
-        required=(ENV in ("staging", "production"))
+        required=(ENV in ("staging", "production")),
     )
 
 
@@ -113,7 +113,9 @@ class Email:
     USE_TLS: bool = _get("EMAIL_USE_TLS", default="true", cast=_to_bool)
     USE_SSL: bool = _get("EMAIL_USE_SSL", default="false", cast=_to_bool)
     TIMEOUT: int = _get("EMAIL_TIMEOUT", default=30, cast=int)
-    CONNECTION_MAX_RETRIES: int = _get("EMAIL_CONNECTION_MAX_RETRIES", default=3, cast=int)
+    CONNECTION_MAX_RETRIES: int = _get(
+        "EMAIL_CONNECTION_MAX_RETRIES", default=3, cast=int
+    )
     BATCH_SIZE: int = _get("EMAIL_BATCH_SIZE", default=90, cast=int)
     MAX_ATTACHMENT_MB: int = _get("EMAIL_MAX_ATTACHMENT_MB", default=10, cast=int)
     DEFAULT_FROM: str = _get("DEFAULT_FROM_EMAIL", required=True)
@@ -154,9 +156,13 @@ class AWS:
 @dataclass(frozen=True)
 class DjangoConfig:
     ALLOWED_HOSTS: list[str] = field(
-        default_factory=lambda: _get("ALLOWED_HOSTS", default="").split(",") if _get("ALLOWED_HOSTS") else []
+        default_factory=lambda: (
+            _get("ALLOWED_HOSTS", default="").split(",")
+            if _get("ALLOWED_HOSTS")
+            else []
+        )
     )
-    DEBUG: bool = (ENV == "development")
+    DEBUG: bool = ENV == "development"
 
 
 # ================================================
@@ -181,11 +187,15 @@ class CeleryConfig:
     TASK_SERIALIZER: str = _get("CELERY_TASK_SERIALIZER", default="json")
     RESULT_SERIALIZER: str = _get("CELERY_RESULT_SERIALIZER", default="json")
     ENABLE_UTC: bool = _get("CELERY_ENABLE_UTC", default="true", cast=_to_bool)
-    TASK_TRACK_STARTED: bool = _get("CELERY_TASK_TRACK_STARTED", default="true", cast=_to_bool)
+    TASK_TRACK_STARTED: bool = _get(
+        "CELERY_TASK_TRACK_STARTED", default="true", cast=_to_bool
+    )
     TASK_TIME_LIMIT: int = _get("CELERY_TASK_TIME_LIMIT", default=300, cast=int)
     BEAT_SCHEDULER: str = _get("CELERY_BEAT_SCHEDULER", required=True)
 
-    BEAT_TZ_AWARE: bool = _get("DJANGO_CELERY_BEAT_TZ_AWARE", default="true", cast=_to_bool)
+    BEAT_TZ_AWARE: bool = _get(
+        "DJANGO_CELERY_BEAT_TZ_AWARE", default="true", cast=_to_bool
+    )
 
 
 # ================================================
@@ -193,10 +203,18 @@ class CeleryConfig:
 # ================================================
 @dataclass(frozen=True)
 class JWTConfig:
-    ACCESS_TOKEN_LIFETIME_MINUTES: int = _get("JWT_ACCESS_LIFETIME_MINUTES", default="15", cast=int)
-    REFRESH_TOKEN_LIFETIME_DAYS: int = _get("JWT_REFRESH_LIFETIME_DAYS", default="7", cast=int)
-    ROTATE_REFRESH_TOKENS: bool = _get("JWT_ROTATE_REFRESH_TOKENS", default="true", cast=_to_bool)
-    BLACKLIST_AFTER_ROTATION: bool = _get("JWT_BLACKLIST_AFTER_ROTATION", default="true", cast=_to_bool)
+    ACCESS_TOKEN_LIFETIME_MINUTES: int = _get(
+        "JWT_ACCESS_LIFETIME_MINUTES", default="15", cast=int
+    )
+    REFRESH_TOKEN_LIFETIME_DAYS: int = _get(
+        "JWT_REFRESH_LIFETIME_DAYS", default="7", cast=int
+    )
+    ROTATE_REFRESH_TOKENS: bool = _get(
+        "JWT_ROTATE_REFRESH_TOKENS", default="true", cast=_to_bool
+    )
+    BLACKLIST_AFTER_ROTATION: bool = _get(
+        "JWT_BLACKLIST_AFTER_ROTATION", default="true", cast=_to_bool
+    )
 
 
 # ================================================
