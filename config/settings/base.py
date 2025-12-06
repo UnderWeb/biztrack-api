@@ -10,6 +10,7 @@ This file:
 
 from datetime import timedelta
 from pathlib import Path
+from corsheaders.defaults import default_headers, default_methods
 from .. import env
 
 
@@ -32,6 +33,7 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    'corsheaders',
     'django_celery_beat',
     'drf_spectacular',
     'rest_framework',
@@ -49,6 +51,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -246,6 +249,27 @@ SIMPLE_JWT = {
 # SECURITY
 # ======================================================
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+# ======================================================
+# CORS
+# ======================================================
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = True
+
+# Default minimal behavior — environments must override the list
+CORS_ALLOWED_ORIGINS = []
+
+CORS_ALLOW_METHODS = list(default_methods)
+
+CORS_ALLOW_HEADERS = list(default_headers)
+
+
+# ======================================================
+# CSRF
+# ======================================================
+# Enforced explicitly by each environment for clarity and security.
+CSRF_TRUSTED_ORIGINS = []
 
 
 # ======================================================
