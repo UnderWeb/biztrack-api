@@ -1,8 +1,8 @@
 import logging
 from urllib.parse import urlparse
 
-from django.conf import settings
 import requests
+from django.conf import settings
 
 from ..exceptions import FileDownloadError
 
@@ -15,9 +15,9 @@ CHUNK_SIZE: int = 8192  # bytes
 
 
 def download_file(
-        url: str,
-        timeout: int = DEFAULT_TIMEOUT,
-    ) -> bytes:
+    url: str,
+    timeout: int = DEFAULT_TIMEOUT,
+) -> bytes:
     """
     Download a file from a remote URL using streaming and a strict size limit.
 
@@ -29,7 +29,8 @@ def download_file(
         The downloaded content as bytes.
 
     Raises:
-        FileDownloadError: For invalid URLs, network errors, HTTP errors, or size limit violations.
+        FileDownloadError: For invalid URLs, network errors,
+        HTTP errors, or size limit violations.
     """
     parsed = urlparse(url)
 
@@ -46,7 +47,12 @@ def download_file(
                 try:
                     response.raise_for_status()
                 except requests.HTTPError as e:
-                    logger.error("download_file: HTTP error for url=%s status=%s", url, response.status_code, exc_info=True)
+                    logger.error(
+                        "download_file: HTTP error for url=%s status=%s",
+                        url,
+                        response.status_code,
+                        exc_info=True,
+                    )
                     raise FileDownloadError(f"HTTP error {response.status_code}") from e
 
                 # If Content-Length header is present, fail fast when it's too large.
@@ -58,11 +64,20 @@ def download_file(
 
                         if content_length_int > max_bytes:
                             logger.warning(
-                                "download_file: Content-Length %s exceeds max for url=%s", content_length, url
+                                "Content-Length %s exceeds max %s for url=%s",
+                                content_length_int,
+                                max_bytes,
+                                url,
                             )
-                            raise FileDownloadError("File exceeds allowed size (Content-Length)")
+                            raise FileDownloadError(
+                                "File exceeds allowed size (Content-Length)"
+                            )
                     except ValueError:
-                        logger.debug("download_file: invalid Content-Length header '%s' for url=%s", content_length, url)
+                        logger.error(
+                            "Invalid Content-Length '%s' for URL: %s",
+                            content_length,
+                            url,
+                        )
 
                 total = 0
                 chunks = []
@@ -72,20 +87,32 @@ def download_file(
                         continue
                     total += len(chunk)
                     if total > max_bytes:
-                        logger.warning("download_file: exceeded max size while streaming url=%s (bytes=%s)", url, total)
-                        raise FileDownloadError("File exceeds allowed size during download")
+                        logger.warning(
+                            "exceeded max size while streaming url=%s (bytes=%s)",
+                            url,
+                            total,
+                        )
+                        raise FileDownloadError(
+                            "File exceeds allowed size during download"
+                        )
                     chunks.append(chunk)
 
                 content = b"".join(chunks)
-                logger.debug("download_file: downloaded %d bytes from url=%s", len(content), url)
+                logger.debug(
+                    "download_file: downloaded %d bytes from url=%s", len(content), url
+                )
                 return content
 
     except requests.RequestException as e:
-        logger.error("download_file: network error downloading url=%s: %s", url, e, exc_info=True)
+        logger.error(
+            "download_file: network error downloading url=%s: %s", url, e, exc_info=True
+        )
         raise FileDownloadError(f"Network error while downloading: {str(e)}") from e
     except FileDownloadError:
         # Re-raise our domain error as-is (already logged where appropriate)
         raise
     except Exception as e:
-        logger.error("download_file: unexpected error for url=%s: %s", url, e, exc_info=True)
+        logger.error(
+            "download_file: unexpected error for url=%s: %s", url, e, exc_info=True
+        )
         raise FileDownloadError(f"Unexpected error while downloading: {str(e)}") from e

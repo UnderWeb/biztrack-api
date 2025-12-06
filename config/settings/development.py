@@ -1,6 +1,5 @@
 from .base import *
 
-
 # ======================================================
 # DEBUG & SECURITY
 # ======================================================
@@ -9,17 +8,17 @@ DEBUG = True
 SECRET_KEY = env.secrets.SECRET_KEY
 
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '0.0.0.0',
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0",
 ]
 
-INTERNAL_IPS = ['127.0.0.1']
+INTERNAL_IPS = ["127.0.0.1"]
 
 
 # Add debug context processor
-TEMPLATES[0]['OPTIONS']['context_processors'] += [
-'django.template.context_processors.debug',
+TEMPLATES[0]["OPTIONS"]["context_processors"] += [
+    "django.template.context_processors.debug",
 ]
 
 
@@ -27,13 +26,13 @@ TEMPLATES[0]['OPTIONS']['context_processors'] += [
 # DATABASE
 # ======================================================
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env.database.NAME,
-        'USER': env.database.USER,
-        'PASSWORD': env.database.PASSWORD,
-        'HOST': env.database.HOST,
-        'PORT': env.database.PORT,
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env.database.NAME,
+        "USER": env.database.USER,
+        "PASSWORD": env.database.PASSWORD,
+        "HOST": env.database.HOST,
+        "PORT": env.database.PORT,
     }
 }
 
@@ -59,4 +58,4 @@ CSRF_TRUSTED_ORIGINS = [
 # ======================================================
 # E-MAIL
 # ======================================================
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

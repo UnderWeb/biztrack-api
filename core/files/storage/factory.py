@@ -1,10 +1,11 @@
 import logging
 from typing import Optional, Type
+
 from django.conf import settings
 
 from .base import StorageBackend
-from .s3_storage import S3StorageBackend
 from .local_storage import LocalStorageBackend
+from .s3_storage import S3StorageBackend
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +18,8 @@ class StorageBackendFactory:
 
     # Registry of supported backends
     _backends: dict[str, Type[StorageBackend]] = {
-        's3': S3StorageBackend,
-        'local': LocalStorageBackend,
+        "s3": S3StorageBackend,
+        "local": LocalStorageBackend,
     }
 
     @classmethod
@@ -29,19 +30,23 @@ class StorageBackendFactory:
         Args:
             name: Identifier for the backend.
             backend_class: StorageBackend subclass.
-        
+
         Raises:
             TypeError: If backend_class does not inherit from StorageBackend.
         """
         if not issubclass(backend_class, StorageBackend):
             logger.error("Attempted to register invalid backend: %s", backend_class)
-            raise TypeError(f"Backend must inherit from StorageBackend: {backend_class}")
-        
+            raise TypeError(
+                f"Backend must inherit from StorageBackend: {backend_class}"
+            )
+
         cls._backends[name] = backend_class
         logger.info("Registered new storage backend: %s", name)
 
     @classmethod
-    def create_backend(cls, backend_type: Optional[str] = None, **kwargs) -> StorageBackend:
+    def create_backend(
+        cls, backend_type: Optional[str] = None, **kwargs
+    ) -> StorageBackend:
         """
         Create a storage backend instance.
 
@@ -51,7 +56,7 @@ class StorageBackendFactory:
 
         Returns:
             StorageBackend instance.
-        
+
         Raises:
             ValueError: If backend_type is unsupported.
             Exception: If backend instantiation fails.
@@ -69,7 +74,9 @@ class StorageBackendFactory:
 
         try:
             instance = backend_class(**kwargs)
-            logger.debug("Successfully created '%s' storage backend instance", backend_type)
+            logger.debug(
+                "Successfully created '%s' storage backend instance", backend_type
+            )
             return instance
         except Exception as e:
             logger.exception(
@@ -85,12 +92,12 @@ class StorageBackendFactory:
         Returns:
             str: Detected backend type ('s3' or 'local').
         """
-        if getattr(settings, 'AWS_STORAGE_BUCKET_NAME', None):
+        if getattr(settings, "AWS_STORAGE_BUCKET_NAME", None):
             logger.info("Detected S3 configuration. Using 's3' backend.")
-            return 's3'
+            return "s3"
 
         logger.info("No S3 configuration found. Falling back to 'local' backend.")
-        return 'local'
+        return "local"
 
     @classmethod
     def get_available_backends(cls) -> list[str]:

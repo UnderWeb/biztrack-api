@@ -29,15 +29,13 @@ class EmailBuilder:
         self.attachment_resolver = attachment_resolver
 
     def build(
-        self,
-        payload: Mapping[str, Any],
-        connection=None
+        self, payload: Mapping[str, Any], connection=None
     ) -> EmailMultiAlternatives:
         """
         Build an email object from validated payload data.
 
         Args:
-            payload (Mapping[str, Any]): Data already validated by EmailPayloadSerializer.
+            payload (Mapping[str, Any]): Data already validated.
             connection (BaseEmailBackend | None): Optional email backend connection.
 
         Returns:
@@ -55,14 +53,13 @@ class EmailBuilder:
         except KeyError as e:
             logger.warning("Missing required email field: %s", e)
             raise EmailBuildError(
-                "Missing required email field",
-                context={"missing": str(e)}
+                "Missing required email field", context={"missing": str(e)}
             )
 
         # Build text body
         text_body = payload.get("text_body") or strip_tags(html_body)
         from_email = payload.get("from_email") or self.default_from
-        
+
         # --- Construct main email object ---
         try:
             email = EmailMultiAlternatives(
@@ -74,12 +71,10 @@ class EmailBuilder:
             )
         except Exception as e:
             logger.error(
-                "Failed to construct EmailMultiAlternatives: %s", e,
-                exc_info=e
+                "Failed to construct EmailMultiAlternatives: %s", e, exc_info=e
             )
             raise EmailBuildError(
-                "Failed to construct EmailMultiAlternatives",
-                context={"error": str(e)}
+                "Failed to construct EmailMultiAlternatives", context={"error": str(e)}
             )
 
         # Optional reply-to

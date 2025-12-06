@@ -1,25 +1,24 @@
 import logging
-from typing import Optional, Dict, Any
 from contextlib import contextmanager
+from typing import Any, Dict, Optional
 
 from django.conf import settings
 
 from .enums import FileTypeValidation
-
-from .storage.factory import get_storage_backend
-from .storage.base import StorageBackend
-from .operations.filenames import (
-    sanitize_filename,
-    generate_unique_filename,
-    infer_filename_from_url,
-)
-from .operations.download import download_file
-from .operations.validators import FileValidator, ValidationRules
 from .exceptions import (
+    FileDownloadError,
     FileError,
     FileNotFoundError,
-    FileDownloadError,
 )
+from .operations.download import download_file
+from .operations.filenames import (
+    generate_unique_filename,
+    infer_filename_from_url,
+    sanitize_filename,
+)
+from .operations.validators import FileValidator, ValidationRules
+from .storage.base import StorageBackend
+from .storage.factory import get_storage_backend
 
 logger = logging.getLogger(__name__)
 
@@ -100,10 +99,7 @@ def read_file(key: str) -> Optional[bytes]:
 
 
 def write_file(
-    key: str,
-    content: bytes,
-    content_type: Optional[str] = None,
-    acl: str = 'private'
+    key: str, content: bytes, content_type: Optional[str] = None, acl: str = "private"
 ) -> str:
     """
     Write file to storage.
@@ -177,9 +173,7 @@ def get_metadata(key: str) -> Optional[Dict[str, Any]]:
 
 
 def get_presigned_url(
-    key: str,
-    filename: Optional[str] = None,
-    expires_in: int = 300
+    key: str, filename: Optional[str] = None, expires_in: int = 300
 ) -> Optional[str]:
     """
     Generate presigned URL for client download.
@@ -203,9 +197,7 @@ def get_presigned_url(
 
     with storage_context() as storage:
         return storage.get_presigned_url(
-            key,
-            expires_in=expires_in,
-            response_content_disposition=disposition
+            key, expires_in=expires_in, response_content_disposition=disposition
         )
 
 
@@ -213,7 +205,7 @@ def get_presigned_upload(
     key: str,
     content_type: str,
     expires_in: int = DEFAULT_PRESIGNED_UPLOAD_EXPIRES,
-    acl: str = 'private'
+    acl: str = "private",
 ) -> Optional[Dict[str, Any]]:
     """
     Generate presigned POST data for direct client upload.
@@ -233,14 +225,12 @@ def get_presigned_upload(
             content_type,
             expires_in=expires_in,
             max_size_mb=settings.EMAIL_MAX_ATTACHMENT_MB,
-            acl=acl
+            acl=acl,
         )
 
 
 def validate_file(
-    key: str,
-    rule_type: str = FileTypeValidation.ANY,
-    max_size_mb: Optional[int] = None
+    key: str, rule_type: str = FileTypeValidation.ANY, max_size_mb: Optional[int] = None
 ) -> bool:
     """
     Validate file against common rules.
@@ -275,9 +265,7 @@ def validate_file(
 
 
 def download_and_store(
-    url: str,
-    target_key: Optional[str] = None,
-    acl: str = 'private'
+    url: str, target_key: Optional[str] = None, acl: str = "private"
 ) -> str:
     """
     Download file from URL and store in S3.
@@ -302,9 +290,7 @@ def download_and_store(
     if not target_key:
         filename = infer_filename_from_url(url)
         target_key = generate_unique_filename(
-            filename,
-            directory="downloads",
-            storage_backend=get_storage()
+            filename, directory="downloads", storage_backend=get_storage()
         )
 
     try:

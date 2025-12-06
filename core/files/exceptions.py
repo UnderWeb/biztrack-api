@@ -31,7 +31,7 @@ class FileError(Exception):
         if self.context:
             return f"{self.__class__.__name__}: {self.message} | context={self.context}"
         return f"{self.__class__.__name__}: {self.message}"
-    
+
 
 class FileNotFoundError(FileError):
     """Raised when a file is not found in storage."""

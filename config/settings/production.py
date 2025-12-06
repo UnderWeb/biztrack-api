@@ -1,6 +1,5 @@
 from .base import *
 
-
 # ======================================================
 # SECURITY
 # ======================================================
@@ -14,23 +13,23 @@ ALLOWED_HOSTS = env.django_conf.ALLOWED_HOSTS
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = 31536000 # 1 year
+SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # ======================================================
 # DATABASE
 # ======================================================
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env.database.NAME,
-        'USER': env.database.USER,
-        'PASSWORD': env.database.PASSWORD,
-        'HOST': env.database.HOST,
-        'PORT': env.database.PORT,
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env.database.NAME,
+        "USER": env.database.USER,
+        "PASSWORD": env.database.PASSWORD,
+        "HOST": env.database.HOST,
+        "PORT": env.database.PORT,
     }
 }
 

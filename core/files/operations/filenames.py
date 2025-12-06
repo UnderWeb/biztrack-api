@@ -1,10 +1,10 @@
+import logging
 import re
 import uuid
-import logging
+from datetime import datetime
 from pathlib import PurePosixPath
 from typing import Optional, Tuple
 from urllib.parse import unquote, urlparse
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,8 @@ def validate_filename(filename: str) -> Tuple[bool, Optional[str]]:
         filename: Filename to validate.
 
     Returns:
-        Tuple[bool, Optional[str]]: (is_valid, error_message). `error_message` is None if valid.
+        Tuple[bool, Optional[str]]: (is_valid, error_message).
+        `error_message` is None if valid.
     """
     if not filename:
         return False, "Filename cannot be empty"
@@ -48,7 +49,7 @@ def validate_filename(filename: str) -> Tuple[bool, Optional[str]]:
     if UNSAFE_CHAR_PATTERN.search(filename):
         return False, "Filename contains unsafe characters"
 
-    if '..' in filename or filename.startswith('/'):
+    if ".." in filename or filename.startswith("/"):
         return False, "Filename cannot contain path components"
 
     return True, None
@@ -66,13 +67,18 @@ def sanitize_filename(filename: str, default: str = DEFAULT_FILENAME) -> str:
         str: Sanitized filename safe for filesystem and S3.
     """
     if not filename or not isinstance(filename, str):
-        logger.debug("Sanitize: invalid filename '%s', returning default '%s'", filename, default)
+        logger.debug(
+            "Sanitize: invalid filename '%s', returning default '%s'", filename, default
+        )
         return default
 
-    safe = UNSAFE_CHAR_PATTERN.sub('_', filename)
-    safe = safe.strip().strip('.')
+    safe = UNSAFE_CHAR_PATTERN.sub("_", filename)
+    safe = safe.strip().strip(".")
     if not safe:
-        logger.debug("Sanitize: filename became empty after cleanup, returning default '%s'", default)
+        logger.debug(
+            "Sanitize: filename became empty after cleanup, returning default '%s'",
+            default,
+        )
         return default
 
     return safe
@@ -110,14 +116,14 @@ def split_extension(filename: str) -> Tuple[str, str]:
     Returns:
         Tuple[str, str]: (base_name, extension_with_dot)
     """
-    if filename.startswith('.'):
-        return '', filename
+    if filename.startswith("."):
+        return "", filename
 
-    if '.' in filename:
-        name, ext = filename.rsplit('.', 1)
-        return name, f'.{ext}'
+    if "." in filename:
+        name, ext = filename.rsplit(".", 1)
+        return name, f".{ext}"
 
-    return filename, ''
+    return filename, ""
 
 
 def infer_filename_from_url(url: str, default: str = DEFAULT_FILENAME) -> str:
@@ -138,10 +144,14 @@ def infer_filename_from_url(url: str, default: str = DEFAULT_FILENAME) -> str:
     try:
         path = unquote(urlparse(url).path)
         filename = PurePosixPath(path).name
-        filename = filename.split('?', 1)[0].split('#', 1)[0]
+        filename = filename.split("?", 1)[0].split("#", 1)[0]
 
-        if not filename or filename in ('.', '..'):
-            logger.debug("Infer: URL '%s' yielded empty filename, returning default '%s'", url, default)
+        if not filename or filename in (".", ".."):
+            logger.debug(
+                "Infer: URL '%s' yielded empty filename, returning default '%s'",
+                url,
+                default,
+            )
             return default
 
         return sanitize_filename(filename, default)
@@ -164,13 +174,11 @@ def infer_filename_from_s3_key(s3_key: str, default: str = DEFAULT_FILENAME) -> 
     if not s3_key:
         logger.debug("Infer: empty S3 key, returning default '%s'", default)
         return default
-    return s3_key.rstrip('/').split('/')[-1] or default
+    return s3_key.rstrip("/").split("/")[-1] or default
 
 
 def generate_s3_key(
-    original_name: str,
-    prefix: str = "uploads",
-    include_date: bool = True
+    original_name: str, prefix: str = "uploads", include_date: bool = True
 ) -> str:
     """
     Generate organized S3 key with optional date-based folders.
@@ -184,17 +192,15 @@ def generate_s3_key(
         str: Full S3 key path.
     """
     sanitized = sanitize_filename(original_name)
-    parts = [prefix.rstrip('/')]
+    parts = [prefix.rstrip("/")]
     if include_date:
         parts.append(datetime.now().strftime("%Y/%m/%d"))
     parts.append(sanitized)
-    return '/'.join(parts)
+    return "/".join(parts)
 
 
 def generate_unique_filename(
-    base_name: str,
-    directory: str = "",
-    storage_backend=None
+    base_name: str, directory: str = "", storage_backend=None
 ) -> str:
     """
     Generate unique filename to avoid collisions in a storage backend.

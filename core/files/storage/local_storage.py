@@ -1,10 +1,10 @@
 import logging
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 from django.core.files.storage import Storage, default_storage
 
-from .base import StorageBackend, FileMetadata
 from ..exceptions import FileError, FileNotFoundError
+from .base import FileMetadata, StorageBackend
 
 logger = logging.getLogger(__name__)
 
@@ -40,17 +40,17 @@ class LocalStorageBackend(StorageBackend):
             FileError: For errors during the read operation (e.g., permission issues).
         """
         try:
-            with self.storage.open(key, 'rb') as file_obj:
+            with self.storage.open(key, "rb") as file_obj:
                 return file_obj.read()
         except FileNotFoundError as e:
             raise FileNotFoundError(
                 f"File not found: {key}",
-                context={'key': key, 'backend': 'local_storage'}
+                context={"key": key, "backend": "local_storage"},
             ) from e
         except Exception as e:
             raise FileError(
                 f"Failed to read file: {key}",
-                context={'key': key, 'backend': 'local_storage', 'error': str(e)}
+                context={"key": key, "backend": "local_storage", "error": str(e)},
             ) from e
 
     def write(
@@ -58,7 +58,7 @@ class LocalStorageBackend(StorageBackend):
         key: str,
         content: bytes,
         content_type: Optional[str] = None,
-        **kwargs  # Ignored for local storage
+        **kwargs,  # Ignored for local storage
     ) -> str:
         """
         Write file content to local storage.
@@ -67,13 +67,13 @@ class LocalStorageBackend(StorageBackend):
             key: Desired file key or path for storage.
             content: File content as raw bytes.
             content_type: Optional MIME type (stored in Django's `ContentFile` object).
-            **kwargs: Extra arguments (ignored by this backend, intended for S3 ACL, etc.).
+            **kwargs: Extra arguments (ignored by this backend).
 
         Returns:
             The stored file key (path).
 
         Raises:
-            FileError: If the write operation fails (e.g., disk full, permission denied).
+            FileError: If the write operation fails.
         """
         from django.core.files.base import ContentFile
 
@@ -85,7 +85,7 @@ class LocalStorageBackend(StorageBackend):
         except Exception as e:
             raise FileError(
                 f"Failed to write file: {key}",
-                context={'key': key, 'backend': 'local_storage', 'error': str(e)}
+                context={"key": key, "backend": "local_storage", "error": str(e)},
             ) from e
 
     def delete(self, key: str) -> None:
@@ -104,7 +104,7 @@ class LocalStorageBackend(StorageBackend):
         except Exception as e:
             raise FileError(
                 f"Failed to delete file: {key}",
-                context={'key': key, 'backend': 'local_storage', 'error': str(e)}
+                context={"key": key, "backend": "local_storage", "error": str(e)},
             ) from e
 
     def exists(self, key: str) -> bool:
@@ -138,7 +138,7 @@ class LocalStorageBackend(StorageBackend):
 
         try:
             size = self.storage.size(key)
-            modified = getattr(self.storage, 'get_modified_time', lambda k: None)(key)
+            modified = getattr(self.storage, "get_modified_time", lambda k: None)(key)
 
             return FileMetadata(
                 key=key,
@@ -146,7 +146,7 @@ class LocalStorageBackend(StorageBackend):
                 content_type=None,  # Local storage doesn't store MIME type
                 last_modified=str(modified) if modified else None,
                 etag=None,
-                extra={'backend': 'local_storage'}
+                extra={"backend": "local_storage"},
             )
         except Exception as e:
             logger.error("Metadata retrieval failed for %s: %s", key, e, exc_info=True)

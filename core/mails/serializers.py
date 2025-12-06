@@ -107,9 +107,7 @@ class EmailPayloadSerializer(serializers.Serializer):
     text_body = serializers.CharField(
         required=False,
         allow_blank=True,
-        help_text=(
-            "Plain text alternative. Auto-generated from HTML if omitted."
-        ),
+        help_text=("Plain text alternative. Auto-generated from HTML if omitted."),
     )
 
     from_email = serializers.EmailField(

@@ -1,10 +1,10 @@
 import logging
-from typing import Optional, Set, Tuple
 from dataclasses import dataclass
 from enum import Enum
+from typing import Optional, Set, Tuple
 
-from ..storage.base import StorageBackend, FileMetadata
 from ..exceptions import FileValidationError
+from ..storage.base import FileMetadata, StorageBackend
 
 logger = logging.getLogger(__name__)
 
@@ -14,24 +14,33 @@ class ContentTypeCategory(Enum):
     Predefined content type categories for validation.
     Use `.value` to access the underlying set of allowed MIME types.
     """
+
     IMAGES = {
-        'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
-        'image/webp', 'image/svg+xml', 'image/bmp'
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "image/svg+xml",
+        "image/bmp",
     }
     DOCUMENTS = {
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.oasis.opendocument.text',
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.oasis.opendocument.text",
     }
     SPREADSHEETS = {
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.oasis.opendocument.spreadsheet',
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.oasis.opendocument.spreadsheet",
     }
     ARCHIVES = {
-        'application/zip', 'application/x-gzip', 'application/x-tar',
-        'application/x-rar-compressed', 'application/x-7z-compressed',
+        "application/zip",
+        "application/x-gzip",
+        "application/x-tar",
+        "application/x-rar-compressed",
+        "application/x-7z-compressed",
     }
     ALL = IMAGES | DOCUMENTS | SPREADSHEETS | ARCHIVES
 
@@ -46,14 +55,19 @@ class ValidationRule:
         allowed_content_types: Set of allowed MIME types.
         require_content_type: Whether to enforce content type validation.
     """
+
     max_size_bytes: Optional[int] = None
     allowed_content_types: Optional[Set[str]] = None
     require_content_type: bool = True
 
     def __post_init__(self):
         # Ensure allowed_content_types is a set
-        if self.allowed_content_types and not isinstance(self.allowed_content_types, set):
-            object.__setattr__(self, 'allowed_content_types', set(self.allowed_content_types))
+        if self.allowed_content_types and not isinstance(
+            self.allowed_content_types, set
+        ):
+            object.__setattr__(
+                self, "allowed_content_types", set(self.allowed_content_types)
+            )
 
 
 class FileValidator:
@@ -69,9 +83,7 @@ class FileValidator:
         self.storage = storage_backend
 
     def validate(
-        self,
-        key: str,
-        rule: ValidationRule
+        self, key: str, rule: ValidationRule
     ) -> Tuple[bool, Optional[FileMetadata], Optional[str]]:
         """
         Validate file against a given rule.
@@ -81,7 +93,8 @@ class FileValidator:
             rule: ValidationRule object defining constraints.
 
         Returns:
-            Tuple of (is_valid, metadata, error_message). `metadata` is None if file not found.
+            Tuple of (is_valid, metadata, error_message).
+            `metadata` is None if file not found.
         """
         try:
             metadata = self.storage.get_metadata(key)
@@ -92,7 +105,8 @@ class FileValidator:
             if rule.max_size_bytes and metadata.size:
                 if metadata.size > rule.max_size_bytes:
                     error = (
-                        f"File size {metadata.size} exceeds limit of {rule.max_size_bytes} bytes"
+                        f"File size {metadata.size} exceeds "
+                        f"limit of {rule.max_size_bytes} bytes"
                     )
                     logger.debug("Validation failed: %s", error)
                     return False, metadata, error
@@ -110,14 +124,12 @@ class FileValidator:
             return True, metadata, None
 
         except Exception as e:
-            logger.error("Unexpected validation error for key %s: %s", key, e, exc_info=True)
+            logger.error(
+                "Unexpected validation error for key %s: %s", key, e, exc_info=True
+            )
             return False, None, f"Validation error: {str(e)}"
 
-    def validate_with_exception(
-        self,
-        key: str,
-        rule: ValidationRule
-    ) -> FileMetadata:
+    def validate_with_exception(self, key: str, rule: ValidationRule) -> FileMetadata:
         """
         Validate file and raise FileValidationError on failure.
 
@@ -136,14 +148,17 @@ class FileValidator:
             raise FileValidationError(
                 error or "File validation failed",
                 context={
-                    'key': key,
-                    'rule': {
-                        'max_size_bytes': rule.max_size_bytes,
-                        'allowed_content_types': list(rule.allowed_content_types)
-                        if rule.allowed_content_types else None,
+                    "key": key,
+                    "rule": {
+                        "max_size_bytes": rule.max_size_bytes,
+                        "allowed_content_types": (
+                            list(rule.allowed_content_types)
+                            if rule.allowed_content_types
+                            else None
+                        ),
                     },
-                    'metadata': metadata.__dict__ if metadata else None
-                }
+                    "metadata": metadata.__dict__ if metadata else None,
+                },
             )
         return metadata
 
@@ -158,7 +173,7 @@ class ValidationRules:
         """Rule for image files."""
         return ValidationRule(
             max_size_bytes=max_size_mb * 1024 * 1024,
-            allowed_content_types=ContentTypeCategory.IMAGES.value
+            allowed_content_types=ContentTypeCategory.IMAGES.value,
         )
 
     @staticmethod
@@ -166,7 +181,7 @@ class ValidationRules:
         """Rule for document files."""
         return ValidationRule(
             max_size_bytes=max_size_mb * 1024 * 1024,
-            allowed_content_types=ContentTypeCategory.DOCUMENTS.value
+            allowed_content_types=ContentTypeCategory.DOCUMENTS.value,
         )
 
     @staticmethod
@@ -174,7 +189,7 @@ class ValidationRules:
         """Rule allowing any supported file type."""
         return ValidationRule(
             max_size_bytes=max_size_mb * 1024 * 1024,
-            allowed_content_types=ContentTypeCategory.ALL.value
+            allowed_content_types=ContentTypeCategory.ALL.value,
         )
 
 
@@ -182,10 +197,9 @@ class ValidationRules:
 # Backward compatible helper functions
 # -----------------------------
 
+
 def validate_content_type_allowed(
-    storage_backend: StorageBackend,
-    key: str,
-    allowed_content_types: Set[str]
+    storage_backend: StorageBackend, key: str, allowed_content_types: Set[str]
 ) -> bool:
     """
     Check if file content type is allowed (legacy function).
@@ -209,9 +223,7 @@ def validate_content_type_allowed(
 
 
 def validate_max_size(
-    storage_backend: StorageBackend,
-    key: str,
-    max_bytes: int
+    storage_backend: StorageBackend, key: str, max_bytes: int
 ) -> bool:
     """
     Check if file size does not exceed max_bytes (legacy function).

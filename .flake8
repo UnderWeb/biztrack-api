@@ -1,0 +1,43 @@
+[flake8]
+# Line length - consistent with Black
+max-line-length = 88
+
+# Ignore only conflicts with Black, NOT E501
+extend-ignore = 
+    E203,
+    W503,
+
+# Smart exclusions
+exclude = 
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    .tox,
+    .mypy_cache,
+    build,
+    dist,
+    *.egg-info,
+    migrations,
+    node_modules
+
+# Ignore per file
+per-file-ignores = 
+    # __init__.py may have unused imports for public API
+    __init__.py: F401,
+    # Tests may use assert (S101) and magic numbers
+    tests/*: S101, B011,
+    */tests/*: S101, B011,
+    # Configuration files may have complex imports
+    */settings/*: F403, F405,
+    # URL files may have long patterns
+    */urls.py: E501
+
+# Cyclomatic complexity (reasonable limit)
+max-complexity = 15
+
+# Professional output format
+format = default
+statistics = true
+count = true

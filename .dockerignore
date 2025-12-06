@@ -52,7 +52,7 @@ htmlcov/
 # ======================================
 # Version control
 # ======================================
-.git/
+# .git/
 .gitignore
 .gitattributes
 .github/

@@ -6,8 +6,8 @@ from django.core.mail import get_connection
 
 from .attachments import AttachmentResolver
 from .builder import EmailBuilder
-from .serializers import EmailPayloadSerializer
 from .exceptions import EmailBuildError
+from .serializers import EmailPayloadSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class EmailSender:
             payloads (List[Dict[str, Any]]): Raw email payload dictionaries to send.
 
         Returns:
-            Dict[str, int]: Summary of the entire batch ("sent": int, "failed": int, "total": int)
+            Dict[str, int]: Summary of the entire batch.
         """
         total = len(payloads)
 
@@ -107,7 +107,7 @@ class EmailSender:
         Validate, build, and send emails for a single batch chunk.
 
         Args:
-            payloads (List[Dict[str, Any]]): The subset of payloads belonging to this chunk.
+            payloads (List[Dict[str, Any]]): Subset of payloads belonging to this chunk.
 
         Returns:
             Dict[str, int]: {"sent": int, "failed": int}
@@ -131,8 +131,9 @@ class EmailSender:
                     if not serializer.is_valid():
                         failed += 1
                         logger.error(
-                            "Invalid email payload [index=%d]: %s", idx,
-                            serializer.errors
+                            "Invalid email payload [index=%d]: %s",
+                            idx,
+                            serializer.errors,
                         )
                         continue
 
@@ -142,8 +143,7 @@ class EmailSender:
                     except EmailBuildError as e:
                         failed += 1
                         logger.error(
-                            "Failed to build email [index=%d]: %s", idx, e,
-                            exc_info=e
+                            "Failed to build email [index=%d]: %s", idx, e, exc_info=e
                         )
                     except Exception as e:
                         failed += 1
@@ -180,9 +180,7 @@ class EmailSender:
                 except Exception as e:
                     # Sending failed for the entire chunk. Mark all as failed.
                     failed += len(emails)
-                    logger.exception(
-                        "Failed to send emails for this chunk: %s", e
-                    )
+                    logger.exception("Failed to send emails for this chunk: %s", e)
 
         except Exception as e:
             failed += len(payloads)

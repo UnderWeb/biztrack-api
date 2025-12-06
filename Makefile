@@ -1,5 +1,5 @@
 # ======================================================
-# MAKEFILE — BIZTRACK SENIOR DEVELOPMENT WORKFLOW
+# MAKEFILE — BIZTRACK DEVELOPMENT WORKFLOW
 # ======================================================
 
 # ------------------------------
@@ -10,9 +10,9 @@ MAIN_SERVICE ?= biztrack-backend
 COMPOSE := docker compose -p $(PROJECT_NAME)
 DOCKER := docker
 MANAGE_PY := python manage.py
+BUILD_DATE := $(shell date +%Y%m%d%H%M%S)
 
 # Detect dev dependencies
-HAS_DEV_DEPS := $(shell test -f requirements-dev.txt && echo true || echo false)
 HAS_CELERY := $(shell grep -q "celery" docker-compose.yml && echo true || echo false)
 
 # ======================================================
@@ -28,6 +28,40 @@ help: ## Display available commands with descriptions
 	@echo "🐍 Main Service: $(MAIN_SERVICE)"
 	@echo "🔧 Django Management: $(MANAGE_PY)"
 	@echo ""
+
+# ======================================================
+# BOOTSTRAP WORKFLOW
+# ======================================================
+bootstrap: ## Initialize project with enterprise standards
+	@echo "🚀 Enterprise Bootstrap Sequence Initiated"
+	@echo "=========================================="
+	
+	# Phase 1: Build infrastructure
+	@echo "📦 Building Docker infrastructure..."
+	$(COMPOSE) build --no-cache --build-arg BUILD_DATE=$(BUILD_DATE)
+	
+	# Phase 2: Host-based tooling installation
+	@echo "🔧 Configuring development environment..."
+	
+	# Check if git repository exists
+	@if [ ! -d ".git" ]; then \
+		echo "⚠️  Initializing Git repository..."; \
+		git init --quiet; \
+		git add .; \
+		git commit -m "chore: initial commit" --quiet || true; \
+	fi
+	
+	# Install pre-commit on host
+	@echo "📝 Installing Git hooks..."
+	@command -v pre-commit >/dev/null 2>&1 || { \
+		echo "Installing pre-commit..."; \
+		pip install pre-commit >/dev/null 2>&1 || pip3 install pre-commit >/dev/null 2>&1 || true; \
+	}
+	@pre-commit install --hook-type pre-commit --hook-type pre-push 2>/dev/null || \
+		echo "⚠️  Pre-commit configuration may need manual setup"
+	
+	# Phase 3: Validation
+	@echo "✅ Enterprise bootstrap completed successfully"
 
 # ======================================================
 # DOCKER OPERATIONS
@@ -126,6 +160,23 @@ check-deploy: ## Run production deployment checks
 	$(COMPOSE) run --rm $(MAIN_SERVICE) $(MANAGE_PY) check --deploy
 
 # ======================================================
+# POETRY DEPENDENCIES HANDLING
+# ======================================================
+poetry-add: ## Add a new Python package inside the container (ARG: PACKAGE)
+ifeq ($(strip $(PACKAGE)),)
+	@echo "⚠️  Please specify a package: make poetry-add PACKAGE=package_name"
+else
+	$(COMPOSE) run --rm $(MAIN_SERVICE) poetry add $(PACKAGE)
+endif
+
+poetry-add-dev: ## Add a new dev package inside the container (ARG: PACKAGE)
+ifeq ($(strip $(PACKAGE)),)
+	@echo "⚠️  Please specify a package: make poetry-add-dev PACKAGE=package_name"
+else
+	$(COMPOSE) run --rm $(MAIN_SERVICE) poetry add -D $(PACKAGE)
+endif
+
+# ======================================================
 # DJANGO TESTING & QA
 # ======================================================
 test: ## Run Django tests verbose
@@ -144,25 +195,16 @@ test-coverage: ## Run tests with coverage
 	@echo "📊 Coverage report: htmlcov/index.html"
 
 test-watch: ## Run tests on file changes
-ifeq ($(HAS_DEV_DEPS),true)
 	$(COMPOSE) run --rm $(MAIN_SERVICE) ptw --runner "$(MANAGE_PY) test --verbosity=2"
-else
-	@echo "⚠️  requirements-dev.txt not found, skipping test-watch"
-endif
 
 lint: ## Run linters and code format check
-ifeq ($(HAS_DEV_DEPS),true)
 	$(COMPOSE) run --rm $(MAIN_SERVICE) sh -c "flake8 . && black --check . && isort --check-only ."
-else
-	@echo "⚠️  requirements-dev.txt not found, skipping lint"
-endif
 
 format: ## Auto-format code
-ifeq ($(HAS_DEV_DEPS),true)
-	$(COMPOSE) run --rm $(MAIN_SERVICE) sh -c "black . && isort ."
-else
-	@echo "⚠️  requirements-dev.txt not found, skipping format"
-endif
+	@echo "🎨 Formatting code..."
+	@CONTAINER_ID=$$(docker ps -q --filter "name=biztrack-backend") && \
+	docker exec -u $(shell id -u) $$CONTAINER_ID sh -c "black . && isort ."
+	@echo "✅ Code formatted"
 
 quality-check: lint test-coverage ## Full QA pipeline
 

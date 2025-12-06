@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Mapping, Any, Dict
 from dataclasses import dataclass, field
+from typing import Any, Dict, Mapping, Optional
 
 
 @dataclass(frozen=True)
@@ -16,6 +16,7 @@ class FileMetadata:
         etag: Entity tag or suitable checksum value when available.
         extra: Additional backend-specific metadata.
     """
+
     key: str
     size: Optional[int] = None
     content_type: Optional[str] = None
@@ -109,7 +110,9 @@ class StorageBackend(ABC):
 
         Default implementation indicates unsupported feature.
         """
-        raise NotImplementedError(f"{self.__class__.__name__} does not support presigned URLs.")
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not support presigned URLs."
+        )
 
     def get_presigned_upload(self, key: str, **kwargs) -> Optional[Dict[str, Any]]:
         """
@@ -117,4 +120,6 @@ class StorageBackend(ABC):
 
         Default implementation indicates unsupported feature.
         """
-        raise NotImplementedError(f"{self.__class__.__name__} does not support presigned uploads.")
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not support presigned uploads."
+        )

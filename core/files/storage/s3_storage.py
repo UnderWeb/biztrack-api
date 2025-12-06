@@ -1,14 +1,14 @@
 import logging
-from typing import Optional, Dict, Any
 from contextlib import contextmanager
+from typing import Any, Dict, Optional
 
 import boto3
 from botocore.exceptions import ClientError
 from django.conf import settings
 
-from .base import StorageBackend, FileMetadata
 from ..enums import S3ACL
-from ..exceptions import FileNotFoundError, FilePermissionError, FileError
+from ..exceptions import FileError, FileNotFoundError, FilePermissionError
+from .base import FileMetadata, StorageBackend
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +23,10 @@ class S3StorageBackend(StorageBackend):
         self,
         bucket: Optional[str] = None,
         region: Optional[str] = None,
-        default_acl: S3ACL = S3ACL.PRIVATE
+        default_acl: S3ACL = S3ACL.PRIVATE,
     ) -> None:
         self.bucket: str = bucket or settings.AWS_STORAGE_BUCKET_NAME
-        self.region: str = region or getattr(settings, 'AWS_REGION', 'us-east-1')
+        self.region: str = region or getattr(settings, "AWS_REGION", "us-east-1")
         self.default_acl: S3ACL = default_acl
         self._client: Optional[Any] = None
 
@@ -39,13 +39,13 @@ class S3StorageBackend(StorageBackend):
         """Lazy initialization of boto3 S3 client."""
         if self._client is None:
             self._client = boto3.client(
-                's3',
+                "s3",
                 region_name=self.region,
                 config=boto3.session.Config(
                     connect_timeout=self.timeout,
                     read_timeout=self.timeout,
-                    retries={'max_attempts': self.max_retries}
-                )
+                    retries={"max_attempts": self.max_retries},
+                ),
             )
         return self._client
 
@@ -64,22 +64,48 @@ class S3StorageBackend(StorageBackend):
         try:
             yield
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', '')
-            extra_context = {'bucket': self.bucket, 'key': key, 'operation': operation, 'error_code': error_code}
+            error_code = e.response.get("Error", {}).get("Code", "")
+            extra_context = {
+                "bucket": self.bucket,
+                "key": key,
+                "operation": operation,
+                "error_code": error_code,
+            }
 
-            if error_code in ('404', 'NoSuchKey', 'NotFound'):
+            if error_code in ("404", "NoSuchKey", "NotFound"):
                 logger.error("S3 object not found: %s", key, extra=extra_context)
-                raise FileNotFoundError(f"S3 object not found: {key}", context=extra_context)
-            elif error_code in ('403', 'AccessDenied'):
+                raise FileNotFoundError(
+                    f"S3 object not found: {key}", context=extra_context
+                )
+            elif error_code in ("403", "AccessDenied"):
                 logger.error("Access denied to S3 object: %s", key, extra=extra_context)
-                raise FilePermissionError(f"Access denied to S3 object: {key}", context=extra_context)
+                raise FilePermissionError(
+                    f"Access denied to S3 object: {key}", context=extra_context
+                )
             else:
-                logger.error("S3 %s failed for %s: %s", operation, key, str(e), extra=extra_context)
-                raise FileError(f"S3 {operation} failed for {key}: {str(e)}", context=extra_context)
+                logger.error(
+                    "S3 %s failed for %s: %s",
+                    operation,
+                    key,
+                    str(e),
+                    extra=extra_context,
+                )
+                raise FileError(
+                    f"S3 {operation} failed for {key}: {str(e)}", context=extra_context
+                )
         except Exception as e:
-            extra_context = {'bucket': self.bucket, 'key': key, 'operation': operation}
-            logger.error("Unexpected error during %s for %s: %s", operation, key, str(e), extra=extra_context)
-            raise FileError(f"Unexpected error during {operation} for {key}: {str(e)}", context=extra_context)
+            extra_context = {"bucket": self.bucket, "key": key, "operation": operation}
+            logger.error(
+                "Unexpected error during %s for %s: %s",
+                operation,
+                key,
+                str(e),
+                extra=extra_context,
+            )
+            raise FileError(
+                f"Unexpected error during {operation} for {key}: {str(e)}",
+                context=extra_context,
+            )
 
     def read(self, key: str) -> bytes:
         """
@@ -94,16 +120,16 @@ class S3StorageBackend(StorageBackend):
         Raises:
             FileNotFoundError, FilePermissionError, FileError
         """
-        with self._handle_s3_errors('read', key):
+        with self._handle_s3_errors("read", key):
             response = self.client.get_object(Bucket=self.bucket, Key=key)
-            return response['Body'].read()
+            return response["Body"].read()
 
     def write(
         self,
         key: str,
         content: bytes,
         content_type: Optional[str] = None,
-        acl: Optional[S3ACL] = None
+        acl: Optional[S3ACL] = None,
     ) -> str:
         """
         Write file content to S3.
@@ -120,12 +146,16 @@ class S3StorageBackend(StorageBackend):
         Raises:
             FilePermissionError, FileError
         """
-        extra_args: Dict[str, Any] = {'ACL': acl.value if acl else self.default_acl.value}
+        extra_args: Dict[str, Any] = {
+            "ACL": acl.value if acl else self.default_acl.value
+        }
         if content_type:
-            extra_args['ContentType'] = content_type
+            extra_args["ContentType"] = content_type
 
-        with self._handle_s3_errors('write', key):
-            self.client.put_object(Bucket=self.bucket, Key=key, Body=content, **extra_args)
+        with self._handle_s3_errors("write", key):
+            self.client.put_object(
+                Bucket=self.bucket, Key=key, Body=content, **extra_args
+            )
             return key
 
     def delete(self, key: str) -> None:
@@ -138,7 +168,7 @@ class S3StorageBackend(StorageBackend):
         Raises:
             FilePermissionError, FileError
         """
-        with self._handle_s3_errors('delete', key):
+        with self._handle_s3_errors("delete", key):
             self.client.delete_object(Bucket=self.bucket, Key=key)
 
     def exists(self, key: str) -> bool:
@@ -152,7 +182,7 @@ class S3StorageBackend(StorageBackend):
             True if exists, False otherwise
         """
         try:
-            with self._handle_s3_errors('exists', key):
+            with self._handle_s3_errors("exists", key):
                 self.client.head_object(Bucket=self.bucket, Key=key)
                 return True
         except FileNotFoundError:
@@ -174,18 +204,18 @@ class S3StorageBackend(StorageBackend):
             FileError
         """
         try:
-            with self._handle_s3_errors('head_object', key):
+            with self._handle_s3_errors("head_object", key):
                 response = self.client.head_object(Bucket=self.bucket, Key=key)
                 return FileMetadata(
                     key=key,
-                    size=response.get('ContentLength'),
-                    content_type=response.get('ContentType'),
-                    last_modified=response.get('LastModified'),
-                    etag=response.get('ETag'),
+                    size=response.get("ContentLength"),
+                    content_type=response.get("ContentType"),
+                    last_modified=response.get("LastModified"),
+                    etag=response.get("ETag"),
                     extra={
-                        'storage_class': response.get('StorageClass'),
-                        'server_side_encryption': response.get('ServerSideEncryption'),
-                    }
+                        "storage_class": response.get("StorageClass"),
+                        "server_side_encryption": response.get("ServerSideEncryption"),
+                    },
                 )
         except FileNotFoundError:
             return None
@@ -194,7 +224,7 @@ class S3StorageBackend(StorageBackend):
         self,
         key: str,
         expires_in: int = 300,
-        response_content_disposition: Optional[str] = None
+        response_content_disposition: Optional[str] = None,
     ) -> Optional[str]:
         """
         Generate presigned URL for private S3 objects.
@@ -210,13 +240,15 @@ class S3StorageBackend(StorageBackend):
         Raises:
             FileError
         """
-        params: Dict[str, Any] = {'Bucket': self.bucket, 'Key': key}
+        params: Dict[str, Any] = {"Bucket": self.bucket, "Key": key}
         if response_content_disposition:
-            params['ResponseContentDisposition'] = response_content_disposition
+            params["ResponseContentDisposition"] = response_content_disposition
 
         try:
-            with self._handle_s3_errors('generate_presigned_url', key):
-                return self.client.generate_presigned_url('get_object', Params=params, ExpiresIn=expires_in)
+            with self._handle_s3_errors("generate_presigned_url", key):
+                return self.client.generate_presigned_url(
+                    "get_object", Params=params, ExpiresIn=expires_in
+                )
         except FileError:
             return None
 
@@ -226,7 +258,7 @@ class S3StorageBackend(StorageBackend):
         content_type: str,
         expires_in: int = 3600,
         max_size_mb: int = 50,
-        acl: S3ACL = S3ACL.PRIVATE
+        acl: S3ACL = S3ACL.PRIVATE,
     ) -> Optional[Dict[str, Any]]:
         """
         Generate presigned POST for direct client upload.
@@ -254,7 +286,7 @@ class S3StorageBackend(StorageBackend):
             fields["acl"] = acl.value
 
         try:
-            with self._handle_s3_errors('generate_presigned_post', key):
+            with self._handle_s3_errors("generate_presigned_post", key):
                 return self.client.generate_presigned_post(
                     Bucket=self.bucket,
                     Key=key,
