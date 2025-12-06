@@ -23,10 +23,15 @@ psycopg = { version = "^3.1", extras = ["binary"] }
 
 # --- Distributed tasks & cache ---
 celery = { version = "^5.5", extras = ["redis"] }
-
 django-redis = "^6.0.0"
-
 django-celery-beat = "^2.8.1"
+
+# --- Storage (AWS S3) ---
+boto3 = "^1.42"
+django-storages = "^1.14"
+
+# --- HTTP utilities ---
+requests = "^2.32"
 
 # ======================================================================
 # DEV DEPENDENCIES

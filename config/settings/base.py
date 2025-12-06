@@ -249,6 +249,46 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # ======================================================
+# E-MAIL
+# ======================================================
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = env.email.HOST
+EMAIL_PORT = env.email.PORT
+EMAIL_HOST_USER = env.email.USER
+EMAIL_HOST_PASSWORD = env.email.PASSWORD
+EMAIL_USE_TLS = env.email.USE_TLS
+EMAIL_USE_SSL= env.email.USE_SSL
+EMAIL_TIMEOUT = env.email.TIMEOUT
+EMAIL_CONNECTION_MAX_RETRIES = env.email.CONNECTION_MAX_RETRIES
+EMAIL_BATCH_SIZE = env.email.BATCH_SIZE
+EMAIL_MAX_ATTACHMENT_MB = env.email.MAX_ATTACHMENT_MB
+DEFAULT_FROM_EMAIL = env.email.DEFAULT_FROM
+
+
+# ======================================================
+# AWS S3 Storage
+# ======================================================
+AWS_ACCESS_KEY_ID = env.aws.ACCESS_KEY
+AWS_SECRET_ACCESS_KEY = env.aws.SECRET_KEY
+AWS_STORAGE_BUCKET_NAME = env.aws.BUCKET_NAME
+AWS_S3_REGION = env.aws.REGION_NAME
+
+AWS_DEFAULT_ACL = None
+AWS_S3_CUSTOM_DOMAIN = env.aws.CUSTOM_DOMAIN
+AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
+
+# Static settings
+STATIC_LOCATION = env.aws.STATIC_LOCATION
+STATIC_URL = env.aws.STATIC_URL
+STATICFILES_STORAGE = "core.storage.StaticStorage"
+
+# Media settings
+MEDIA_LOCATION = env.aws.MEDIA_LOCATION
+MEDIA_URL = env.aws.MEDIA_URL
+DEFAULT_FILE_STORAGE = "core.storage.PrivateMediaStorage"
+
+
+# ======================================================
 # LOGGING (base minimal configuration; environment can override)
 # ======================================================
 LOGGING = {
